@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DerivZella Elite - MT5 Trading Journal & Quant AI (Light Mode)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for Equity Curve -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; 
+            background-color: #f8fafc; 
+            color: #0f172a; 
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        input, select, textarea { 
+            background-color: #ffffff !important; 
+            border: 1px solid #cbd5e1 !important; 
+            color: #0f172a !important; 
+        }
+        input:focus, select:focus, textarea:focus { 
+            outline: none; 
+            border-color: #4f46e5 !important; 
+            box-shadow: 0 0 0 1px #4f46e5; 
+        }
+        .tab-active { 
+            border-color: #4f46e5 !important; 
+            color: #4f46e5 !important; 
+            background-color: #eef2ff !important; 
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-sm">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="custom-confirm-modal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 max-w-sm w-full p-5 rounded-xl shadow-xl space-y-4">
+            <h4 id="confirm-modal-title" class="font-bold text-slate-900 text-base">Confirm Action</h4>
+            <p id="confirm-modal-desc" class="text-xs text-slate-500 leading-relaxed"></p>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeConfirmModal(false)" class="px-3 py-1.5 rounded-lg text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 transition font-medium">Cancel</button>
+                <button onclick="closeConfirmModal(true)" id="confirm-modal-action-btn" class="px-3.5 py-1.5 rounded-lg text-xs bg-rose-600 text-white font-semibold hover:bg-rose-500 transition shadow-sm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Left Sidebar -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 select-none">
+        <div class="p-4 space-y-6 overflow-y-auto">
+            <!-- Brand -->
+            <div class="flex items-center space-x-2.5 px-2 py-1">
+                <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center font-extrabold text-white text-xs shadow-md shadow-indigo-500/25">DZ</div>
+                <div>
+                    <span class="font-extrabold text-sm tracking-wide text-slate-900">DERIV<span class="text-indigo-600">ZELLA</span></span>
+                    <span class="text-[9px] block text-slate-400 font-mono tracking-tighter uppercase font-semibold">Light Quant Edition</span>
+                </div>
+            </div>
+
+            <!-- Workspace Navigation -->
+            <div class="space-y-1">
+                <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold px-2 mb-1.5">Workspace</p>
+                <div onclick="switchView('dashboard')" id="nav-dashboard" class="flex items-center space-x-2.5 px-2.5 py-2 rounded-lg cursor-pointer text-indigo-600 tab-active transition font-semibold">
+                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    <span class="text-xs">Dashboard & Heatmap</span>
+                </div>
+                <div onclick="switchView('logs')" id="nav-logs" class="flex items-center space-x-2.5 px-2.5 py-2 rounded-lg cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition font-medium">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    <span class="text-xs">Trades Master Log</span>
+                </div>
+                <div onclick="switchView('playbooks')" id="nav-playbooks" class="flex items-center space-x-2.5 px-2.5 py-2 rounded-lg cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition font-medium">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span class="text-xs">Playbooks Database</span>
+                </div>
+                <div onclick="switchView('ai-coach')" id="nav-ai-coach" class="flex items-center space-x-2.5 px-2.5 py-2 rounded-lg cursor-pointer text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition font-medium">
+                    <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span class="text-xs text-slate-700">Zella Quant AI</span>
+                </div>
+            </div>
+
+            <!-- Setups Edge List -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between px-2">
+                    <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">🛠 Strategy Edge</p>
+                    <button onclick="addNewSetupPrompt()" class="text-xs text-slate-400 hover:text-slate-700" title="Add Playbook">+</button>
+                </div>
+                <div id="sidebar-setups-list" class="space-y-1"></div>
+            </div>
+        </div>
+
+        <!-- Sidebar Bottom Controls -->
+        <div class="p-3 border-t border-slate-200 space-y-2 bg-slate-50">
+            <div class="flex justify-between text-[11px] text-slate-500 font-medium px-1">
+                <button onclick="exportCSV()" class="hover:text-indigo-600 transition">Export CSV</button>
+                <button onclick="exportJSON()" class="hover:text-indigo-600 transition">Backup JSON</button>
+                <button onclick="triggerImport()" class="hover:text-indigo-600 transition">Restore</button>
+            </div>
+            <input type="file" id="importFile" class="hidden" onchange="importJSON(event)">
+            <p class="text-[10px] text-slate-400 text-center font-mono">Deriv Step & Vol 90 1s Edition</p>
+        </div>
+    </aside>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-grow flex flex-col overflow-hidden bg-slate-50">
+        
+        <!-- Top Header Bar -->
+        <header class="h-12 border-b border-slate-200 px-6 flex items-center justify-between shrink-0 bg-white shadow-xs">
+            <div class="flex items-center space-x-2 text-xs text-slate-500 font-medium">
+                <span>Workspace</span>
+                <span>/</span>
+                <span class="text-slate-900 font-semibold" id="current-page-title">Dashboard & Heatmap</span>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <div class="hidden sm:flex items-center bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg">
+                    <span class="text-xs text-slate-500 mr-2 font-medium">Account Balance ($):</span>
+                    <input type="number" id="account-balance" onchange="updateStartingBalance(this.value)" value="2500" class="w-20 bg-transparent text-xs font-mono font-bold text-emerald-600 border-none p-0 focus:ring-0">
+                </div>
+                <button onclick="openCreateModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition flex items-center space-x-1.5">
+                    <span>+ Log Trade Setup</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- VIEW 1: DASHBOARD & CALENDAR HEATMAP -->
+        <div class="flex-grow overflow-y-auto px-8 py-6 max-w-7xl w-full mx-auto space-y-6" id="dashboard-view-pane">
+            
+            <!-- Metrics Ribbon -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3.5">
+                <div class="p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
+                    <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Net Realized P&L</p>
+                    <p id="stat-net-pl" class="text-2xl font-extrabold font-mono mt-1 text-slate-900">$0.00</p>
+                    <span id="stat-growth-pct" class="text-[10px] text-slate-500 font-medium">0.0% account change</span>
+                </div>
+                <div class="p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
+                    <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Win Rate</p>
+                    <p id="stat-win-rate" class="text-2xl font-extrabold font-mono mt-1 text-indigo-600">0%</p>
+                    <span id="stat-total-trades" class="text-[10px] text-slate-500 font-medium">0 Total executions</span>
+                </div>
+                <div class="p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
+                    <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Profit Factor</p>
+                    <p id="stat-profit-factor" class="text-2xl font-extrabold font-mono mt-1 text-slate-900">0.00</p>
+                    <span class="text-[10px] text-slate-500 font-medium">Gross Wins / Losses</span>
+                </div>
+                <div class="p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
+                    <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Expectancy ($E)</p>
+                    <p id="stat-ev" class="text-2xl font-extrabold font-mono mt-1 text-slate-900">$0.00</p>
+                    <span class="text-[10px] text-slate-500 font-medium">Avg value per setup</span>
+                </div>
+                <div class="p-4 bg-white border border-slate-200 rounded-xl shadow-xs col-span-2 md:col-span-1">
+                    <p class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Avg Win / Loss</p>
+                    <div class="flex items-baseline space-x-1.5 mt-1 font-mono">
+                        <span id="stat-avg-win" class="text-base font-bold text-emerald-600">$0</span>
+                        <span class="text-slate-300">/</span>
+                        <span id="stat-avg-loss" class="text-base font-bold text-rose-600">-$0</span>
+                    </div>
+                    <span id="stat-max-dd" class="text-[10px] text-slate-500 font-medium">Max DD: $0.00</span>
+                </div>
+            </div>
+
+            <!-- Equity Curve Chart -->
+            <div class="p-5 bg-white border border-slate-200 rounded-xl space-y-3 shadow-xs">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 tracking-wide">Cumulative Account Growth (Equity Curve)</h3>
+                        <p class="text-[11px] text-slate-500">Visualizing compounding curve over chronological executions.</p>
+                    </div>
+                </div>
+                <div class="relative h-60 w-full">
+                    <canvas id="equityChartCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Daily Performance Heatmap Calendar -->
+            <div class="p-5 bg-white border border-slate-200 rounded-xl space-y-4 shadow-xs">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center space-x-3">
+                        <h3 class="text-sm font-bold text-slate-900 tracking-wide">Daily Performance Heatmap</h3>
+                        <span class="text-[11px] text-slate-400 font-medium">Click any trading day to filter log</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="changeMonth(-1)" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition text-xs font-bold px-2.5">&lt; Prev</button>
+                        <span id="calendar-month-name" class="text-xs font-bold text-slate-800 uppercase tracking-wider font-mono min-w-32 text-center">Month Year</span>
+                        <button onclick="changeMonth(1)" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition text-xs font-bold px-2.5">Next &gt;</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 uppercase py-1">
+                    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                </div>
+                <div id="calendar-days-grid" class="grid grid-cols-7 gap-1.5"></div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: TRADES MASTER LOG -->
+        <div class="flex-grow overflow-y-auto px-8 py-6 max-w-7xl w-full mx-auto space-y-5 hidden" id="logs-view-pane">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-slate-900">Execution Master Log</h1>
+                    <p class="text-slate-500 text-xs">Filter, audit, and analyze single and multi-layered position orders.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="clearAllDataPrompt()" class="text-xs text-rose-600 hover:text-rose-700 font-semibold px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 transition">
+                        Wipe Database
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search & Filters -->
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 bg-white border border-slate-200 p-2.5 rounded-xl shadow-xs">
+                <input type="text" id="db-search" oninput="renderTable()" placeholder="Search asset, setup or tag..." class="text-xs rounded-lg px-3 py-2 border border-slate-300 placeholder-slate-400 focus:outline-none">
+                <select id="filter-asset" onchange="renderTable()" class="text-xs rounded-lg px-2.5 py-2"></select>
+                <select id="filter-outcome" onchange="renderTable()" class="text-xs rounded-lg px-2.5 py-2">
+                    <option value="All">All Outcomes (Wins & Losses)</option>
+                    <option value="Win">Winners Only</option>
+                    <option value="Loss">Losses Only</option>
+                </select>
+                <button onclick="resetFilters()" class="text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 transition">
+                    Clear Active Filters
+                </button>
+            </div>
+
+            <!-- Master Table Container -->
+            <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider border-b border-slate-200">
+                                <th class="py-3 px-3.5">Setup / Date</th>
+                                <th class="py-3 px-3.5">Market & Layers</th>
+                                <th class="py-3 px-3.5">Direction</th>
+                                <th class="py-3 px-3.5">Playbook</th>
+                                <th class="py-3 px-3.5 text-right">Avg Entry</th>
+                                <th class="py-3 px-3.5 text-right">Plan R:R</th>
+                                <th class="py-3 px-3.5 text-right">Realized R:R</th>
+                                <th class="py-3 px-3.5 text-right">Net P&L</th>
+                                <th class="py-3 px-3.5">Mental Tag</th>
+                                <th class="py-3 px-3.5 text-center">Grade</th>
+                                <th class="py-3 px-3.5 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trade-log-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                    </table>
+                </div>
+                <div id="table-empty-state" class="p-12 text-center text-slate-400 text-xs hidden">
+                    No matching trades found.
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: PLAYBOOKS DATABASE -->
+        <div class="flex-grow overflow-y-auto px-8 py-6 max-w-7xl w-full mx-auto space-y-6 hidden" id="playbooks-view-pane">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-slate-900">Strategy Playbooks</h1>
+                    <p class="text-slate-500 text-xs">Track mathematical edge and expectancy across each trade model.</p>
+                </div>
+                <button onclick="addNewSetupPrompt()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-xs">
+                    + New Strategy Model
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="playbook-cards-grid"></div>
+        </div>
+
+        <!-- VIEW 4: ZELLA QUANT AI -->
+        <div class="flex-grow overflow-y-auto px-8 py-6 max-w-7xl w-full mx-auto space-y-6 hidden" id="ai-coach-view-pane">
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-indigo-600 flex items-center space-x-2">
+                    <span>✨</span>
+                    <span>Zella Quant & Psychological AI</span>
+                </h1>
+                <p class="text-slate-500 text-xs">Algorithmic diagnostics auditing your position stacking, Boom/Crash slippages, Volatility 90 1s, and mental leaks.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-white border border-slate-200 rounded-xl p-4 flex flex-col h-[460px] shadow-xs">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Quant Diagnostic Console</h3>
+                            <span class="text-[10px] text-emerald-700 font-mono bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-semibold">Engine Active</span>
+                        </div>
+                        
+                        <div id="chat-messages-container" class="flex-grow overflow-y-auto space-y-3 pr-2 text-xs">
+                            <div class="p-3 bg-indigo-50/70 text-indigo-900 border border-indigo-100 rounded-lg leading-relaxed">
+                                <b>🤖 Zella Quant AI:</b> Ingested database across all Volatility, Boom/Crash, Step, and Vol 90 1s instruments. Click an audit button below or ask a custom question.
+                            </div>
+                        </div>
+
+                        <form onsubmit="handleChatSubmit(event)" class="flex items-center space-x-2 shrink-0 pt-3 border-t border-slate-100">
+                            <input type="text" id="ai-user-query" placeholder="Ask about step indices, vol 90 1s, position stacking, or Kelly sizing..." class="flex-grow text-xs rounded-lg px-3 py-2 border border-slate-300 focus:outline-none">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2 rounded-lg transition shadow-xs">Audit</button>
+                        </form>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button onclick="triggerDirectAIPrompt('vol90')" class="p-2.5 text-[11px] text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl font-medium transition text-left shadow-xs">
+                            ⚡ Vol 90 (1s) Edge
+                        </button>
+                        <button onclick="triggerDirectAIPrompt('step')" class="p-2.5 text-[11px] text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl font-medium transition text-left shadow-xs">
+                            🪜 Step Indices Edge
+                        </button>
+                        <button onclick="triggerDirectAIPrompt('stacking')" class="p-2.5 text-[11px] text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl font-medium transition text-left shadow-xs">
+                            📦 Multi-Layer Stacking
+                        </button>
+                        <button onclick="triggerDirectAIPrompt('kelly')" class="p-2.5 text-[11px] text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl font-medium transition text-left shadow-xs">
+                            📐 Kelly Criterion
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quant Metrics Card -->
+                <div class="bg-white border border-slate-200 p-5 rounded-xl space-y-4 shadow-xs">
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Algorithmic Diagnostics</h3>
+                    <div class="space-y-4 text-xs font-medium">
+                        <div class="border-b border-slate-100 pb-3">
+                            <p class="text-[10px] text-slate-400 uppercase font-semibold">Highest Yield Market</p>
+                            <p id="ai-diagnostic-top-asset" class="font-bold text-emerald-600 mt-0.5">N/A</p>
+                        </div>
+                        <div class="border-b border-slate-100 pb-3">
+                            <p class="text-[10px] text-slate-400 uppercase font-semibold">Costliest Psychological State</p>
+                            <p id="ai-diagnostic-worst-psych" class="font-bold text-rose-600 mt-0.5">N/A</p>
+                        </div>
+                        <div class="border-b border-slate-100 pb-3">
+                            <p class="text-[10px] text-slate-400 uppercase font-semibold">Multi-Layer Stacking P&L</p>
+                            <p id="ai-diagnostic-layered-pnl" class="font-bold text-slate-900 mt-0.5">$0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-400 uppercase font-semibold">Spike Slippage Toll Paid</p>
+                            <p id="ai-diagnostic-slippage-toll" class="font-bold text-amber-600 mt-0.5">$0.00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MASTER MODAL: LOG / EDIT TRADE SETUP -->
+    <div id="notion-peek-modal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex justify-center items-center p-4 overflow-y-auto" onclick="closePeekModal()">
+        <div class="bg-white border border-slate-200 w-full max-w-3xl rounded-2xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl" onclick="event.stopPropagation()">
+            
+            <div class="flex items-center justify-between px-6 py-3.5 border-b border-slate-200 text-xs text-slate-500 bg-slate-50">
+                <div class="flex items-center space-x-2">
+                    <span class="font-mono text-slate-400">ID:</span>
+                    <span id="peek-modal-heading" class="text-slate-900 font-bold">New Trade Setup</span>
+                </div>
+                <button onclick="closePeekModal()" class="text-slate-400 hover:text-slate-600 transition text-base font-bold">✕</button>
+            </div>
+
+            <div class="flex-grow overflow-y-auto p-6 space-y-6">
+                <div>
+                    <input type="text" id="peek-title" class="w-full bg-transparent border-none text-xl font-bold focus:ring-0 focus:outline-none placeholder-slate-400 mb-1" placeholder="Setup Name (e.g. Volatility 90 1s Pullback Continuation)">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs border-b border-slate-100 pb-5">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-500 font-medium">Market / Asset:</span>
+                            <select id="peek-asset" class="px-2.5 py-1 rounded-lg text-xs w-52"></select>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-500 font-medium">Strategy Setup:</span>
+                            <select id="peek-setup" class="px-2.5 py-1 rounded-lg text-xs w-52"></select>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-500 font-medium">Execution Bias:</span>
+                            <select id="peek-direction" onchange="calculateFormMetrics()" class="px-2.5 py-1 rounded-lg text-xs w-52 font-semibold">
+                                <option value="Buy">Buy (Long)</option>
+                                <option value="Sell">Sell (Short)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-500 font-medium">Execution Date:</span>
+                            <input type="date" id="peek-date" class="px-2.5 py-1 rounded-lg text-xs w-52">
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-500 font-medium">Stop Loss Level:</span>
+                            <input type="number" id="peek-sl" step="any" oninput="calculateFormMetrics()" placeholder="12450.00" class="px-2.5 py-1 rounded-lg text-xs w-52 font-mono">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-500 font-medium">Take Profit Level:</span>
+                            <input type="number" id="peek-tp" step="any" oninput="calculateFormMetrics()" placeholder="12900.00" class="px-2.5 py-1 rounded-lg text-xs w-52 font-mono">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-500 font-medium">Mental State:</span>
+                            <select id="peek-psych" class="px-2.5 py-1 rounded-lg text-xs w-52">
+                                <option value="Calm & Disciplined">Calm & Disciplined</option>
+                                <option value="FOMO / Chasing">FOMO / Chasing</option>
+                                <option value="Greedy / Overleveraged">Greedy / Overleveraged</option>
+                                <option value="Revenge Trading">Revenge Trading</option>
+                                <option value="Impatient Execution">Impatient Execution</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-500 font-medium">Execution Grade:</span>
+                            <select id="peek-grade" class="px-2.5 py-1 rounded-lg text-xs w-52 font-semibold">
+                                <option value="A">Grade A (Strict Rules Followed)</option>
+                                <option value="B">Grade B (Minor Deviation)</option>
+                                <option value="C">Grade C (Poor Entry/Management)</option>
+                                <option value="F">Grade F (Uncontrolled Gamble)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multi-Position Sub-Table -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">Positions & Layered Orders</h3>
+                            <p class="text-[11px] text-slate-500">Log single entries or stacked multiple positions on this market.</p>
+                        </div>
+                        <button type="button" onclick="addPositionRow()" class="text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-lg transition font-semibold">
+                            + Add Entry Layer
+                        </button>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 border-b border-slate-200">
+                                    <th class="py-2.5 px-3">#</th>
+                                    <th class="py-2.5 px-3">Lot Size</th>
+                                    <th class="py-2.5 px-3">Entry Price</th>
+                                    <th class="py-2.5 px-3">Exit Price</th>
+                                    <th class="py-2.5 px-3">Net P&L ($)</th>
+                                    <th class="py-2.5 px-2 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="position-rows-container" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px] font-mono">
+                        <div><span class="text-slate-500 block">Total Layers:</span><span id="summary-pos-count" class="font-bold text-slate-900">1</span></div>
+                        <div><span class="text-slate-500 block">Total Lot Volume:</span><span id="summary-total-lot" class="font-bold text-slate-900">0.00</span></div>
+                        <div><span class="text-slate-500 block">Weighted Entry:</span><span id="summary-avg-entry" class="font-bold text-slate-900">0.00</span></div>
+                        <div><span class="text-slate-500 block">Total Net P&L:</span><span id="summary-net-pl" class="font-bold text-slate-900">$0.00</span></div>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2 pt-1">
+                    <input type="checkbox" id="peek-slippage" class="w-4 h-4 text-indigo-600 bg-white border-slate-300 rounded focus:ring-indigo-500">
+                    <label for="peek-slippage" class="text-xs text-slate-600 font-medium cursor-pointer">
+                        Slippage occurred against Stop Loss?
+                    </label>
+                </div>
+
+                <div class="space-y-1.5">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-700">📝 Trade Retrospective & Chart Notes</h3>
+                    <textarea id="peek-notes" class="w-full h-24 bg-white border border-slate-200 rounded-xl p-3 text-xs focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 focus:outline-none leading-relaxed" placeholder="What technical confluence confirmed this trade? How did you manage emotions during drawdowns?"></textarea>
+                </div>
+            </div>
+
+            <div class="px-6 py-3.5 border-t border-slate-200 flex justify-between items-center bg-slate-50">
+                <button id="peek-delete-btn" onclick="deleteActivePeekTradePrompt()" class="text-xs text-rose-600 hover:text-rose-700 font-semibold">Delete Setup</button>
+                <div class="flex space-x-2">
+                    <button onclick="closePeekModal()" class="text-xs bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 px-4 py-2 rounded-lg font-medium transition">Cancel</button>
+                    <button onclick="savePeekChanges()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg transition shadow-xs">Save Trade Setup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT MASTER ENGINE -->
+    <script>
+        // Strategy Setup Models
+        let setups = JSON.parse(localStorage.getItem('deriv_notion_setups_v6')) || [
+            { id: 's1', name: 'SMC Displacement & FVG', rules: 'H4 Market Structure Shift -> M15 mitigation entry.' },
+            { id: 's2', name: 'Boom/Crash Spike Hunt', rules: 'Scale small lot orders across multi-touch demand bands.' },
+            { id: 's3', name: 'Step Index Multi-Layer Trend', rules: 'Fixed step increment momentum breakout on M15/H1.' },
+            { id: 's4', name: 'Vol 90 1s High-Speed Momentum', rules: 'M1/M5 impulsive expansion trend continuation.' }
+        ];
+
+        let trades = JSON.parse(localStorage.getItem('deriv_notion_trades_v6')) || [];
+        let startingBalance = parseFloat(localStorage.getItem('deriv_starting_balance_v6')) || 2500;
+
+        let currentView = 'dashboard';
+        let currentMonthOffset = 0;
+        let activePeekTradeId = null;
+        let modalPositions = [];
+        let equityChartInstance = null;
+        let confirmActionCallback = null;
+
+        // Comprehensive Deriv Synthetic Markets (Including Step Suite and Vol 90 1s)
+        const assetOptions = [
+            // Volatility Indices Suite (Including Volatility 90 (1s) Index)
+            "Volatility 10 Index", "Volatility 25 Index", "Volatility 50 Index", "Volatility 75 Index", "Volatility 100 Index",
+            "Volatility 10 (1s) Index", "Volatility 25 (1s) Index", "Volatility 50 (1s) Index", "Volatility 75 (1s) Index", 
+            "Volatility 90 (1s) Index", 
+            "Volatility 100 (1s) Index", "Volatility 150 (1s) Index", "Volatility 250 (1s) Index",
+            
+            // Step Indices Family
+            "Step Index", "Step 100 Index", "Step 200 Index", "Step 300 Index", "Step 400 Index", "Step 500 Index", "Multi Step Index", "Skew Step Index",
+            
+            // Crash & Boom
+            "Boom 300 Index", "Boom 500 Index", "Boom 1000 Index",
+            "Crash 300 Index", "Crash 500 Index", "Crash 1000 Index",
+            
+            // Range Break & Jumps
+            "Range Break 100 Index", "Range Break 200 Index",
+            "Jump 10 Index", "Jump 25 Index", "Jump 50 Index", "Jump 75 Index", "Jump 100 Index",
+            
+            // Forex & Commodities
+            "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "USDCHF",
+            "Gold (XAUUSD)", "Silver (XAGUSD)", "Crude Oil (WTI)",
+            "BTCUSD", "ETHUSD", "LTCUSD"
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('account-balance').value = startingBalance;
+            populateAssetFilterDropdown();
+            renderAll();
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (!document.getElementById('notion-peek-modal').classList.contains('hidden')) closePeekModal();
+                    if (!document.getElementById('custom-confirm-modal').classList.contains('hidden')) closeConfirmModal(false);
+                }
+            });
+        });
+
+        function saveToStorage() {
+            localStorage.setItem('deriv_notion_setups_v6', JSON.stringify(setups));
+            localStorage.setItem('deriv_notion_trades_v6', JSON.stringify(trades));
+            localStorage.setItem('deriv_starting_balance_v6', startingBalance);
+        }
+
+        function updateStartingBalance(val) {
+            startingBalance = parseFloat(val) || 2500;
+            saveToStorage();
+            renderAll();
+            showToast("Starting balance updated", "success");
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = {
+                info: 'bg-white border-slate-200 text-slate-800 shadow-lg',
+                success: 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-lg',
+                error: 'bg-rose-50 border-rose-300 text-rose-800 shadow-lg'
+            };
+            toast.className = `px-4 py-2.5 rounded-xl border text-xs font-semibold transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-auto ${colors[type]}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => toast.classList.remove('translate-y-4', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function showConfirm(title, desc, onConfirm) {
+            document.getElementById('confirm-modal-title').textContent = title;
+            document.getElementById('confirm-modal-desc').textContent = desc;
+            confirmActionCallback = onConfirm;
+            document.getElementById('custom-confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal(isConfirmed) {
+            document.getElementById('custom-confirm-modal').classList.add('hidden');
+            if (isConfirmed && typeof confirmActionCallback === 'function') confirmActionCallback();
+            confirmActionCallback = null;
+        }
+
+        function switchView(viewId) {
+            currentView = viewId;
+            const titles = {
+                'dashboard': 'Dashboard & Heatmap',
+                'logs': 'Trades Master Log',
+                'playbooks': 'Strategy Playbooks',
+                'ai-coach': 'Zella Quant AI'
+            };
+            document.getElementById('current-page-title').textContent = titles[viewId];
+
+            ['dashboard', 'logs', 'playbooks', 'ai-coach'].forEach(id => {
+                document.getElementById(`${id}-view-pane`).classList.add('hidden');
+                document.getElementById(`nav-${id}`).classList.remove('tab-active');
+            });
+            document.getElementById(`${viewId}-view-pane`).classList.remove('hidden');
+            document.getElementById(`nav-${viewId}`).classList.add('tab-active');
+
+            if (viewId === 'dashboard') {
+                renderEquityChart();
+                renderCalendar();
+            }
+        }
+
+        function populateAssetFilterDropdown() {
+            const select = document.getElementById('filter-asset');
+            select.innerHTML = '<option value="All">All Markets</option>';
+            assetOptions.forEach(opt => {
+                const o = document.createElement('option');
+                o.value = opt;
+                o.textContent = opt;
+                select.appendChild(o);
+            });
+        }
+
+        // Multi-Position Layering Functions
+        function renderPositionRows() {
+            const container = document.getElementById('position-rows-container');
+            container.innerHTML = '';
+
+            modalPositions.forEach((pos, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition font-mono";
+                tr.innerHTML = `
+                    <td class="py-2 px-3 text-slate-400 text-[11px]">${index + 1}</td>
+                    <td class="py-2 px-3">
+                        <input type="number" step="any" value="${pos.lot}" oninput="updatePositionField(${index}, 'lot', this.value)" class="w-20 px-2 py-1 rounded text-xs font-mono">
+                    </td>
+                    <td class="py-2 px-3">
+                        <input type="number" step="any" value="${pos.entryPrice}" oninput="updatePositionField(${index}, 'entryPrice', this.value)" class="w-28 px-2 py-1 rounded text-xs font-mono">
+                    </td>
+                    <td class="py-2 px-3">
+                        <input type="number" step="any" value="${pos.exitPrice}" oninput="updatePositionField(${index}, 'exitPrice', this.value)" class="w-28 px-2 py-1 rounded text-xs font-mono">
+                    </td>
+                    <td class="py-2 px-3">
+                        <input type="number" step="any" value="${pos.pnl}" oninput="updatePositionField(${index}, 'pnl', this.value)" class="w-24 px-2 py-1 rounded text-xs font-mono font-bold ${pos.pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
+                    </td>
+                    <td class="py-2 px-2 text-center">
+                        <button type="button" onclick="removePositionRow(${index})" class="text-slate-400 hover:text-rose-600 transition" title="Remove Layer">✕</button>
+                    </td>
+                `;
+                container.appendChild(tr);
+            });
+
+            calculateFormMetrics();
+        }
+
+        function addPositionRow() {
+            const lastPos = modalPositions[modalPositions.length - 1];
+            modalPositions.push({
+                id: Date.now() + Math.random(),
+                lot: lastPos ? lastPos.lot : 0.1,
+                entryPrice: lastPos ? lastPos.entryPrice : 0,
+                exitPrice: lastPos ? lastPos.exitPrice : 0,
+                pnl: 0
+            });
+            renderPositionRows();
+        }
+
+        function removePositionRow(index) {
+            if (modalPositions.length <= 1) {
+                showToast("A setup requires at least 1 position order layer.", "error");
+                return;
+            }
+            modalPositions.splice(index, 1);
+            renderPositionRows();
+        }
+
+        function updatePositionField(index, field, value) {
+            modalPositions[index][field] = parseFloat(value) || 0;
+            calculateFormMetrics();
+        }
+
+        function calculateFormMetrics() {
+            let totalLot = 0;
+            let sumWeightedEntry = 0;
+            let sumWeightedExit = 0;
+            let totalNetPL = 0;
+
+            modalPositions.forEach(p => {
+                totalLot += p.lot;
+                sumWeightedEntry += (p.entryPrice * p.lot);
+                sumWeightedExit += (p.exitPrice * p.lot);
+                totalNetPL += p.pnl;
+            });
+
+            const avgEntry = totalLot > 0 ? (sumWeightedEntry / totalLot) : 0;
+
+            document.getElementById('summary-pos-count').textContent = modalPositions.length;
+            document.getElementById('summary-total-lot').textContent = totalLot.toFixed(3);
+            document.getElementById('summary-avg-entry').textContent = avgEntry.toFixed(2);
+            
+            const netEl = document.getElementById('summary-net-pl');
+            netEl.textContent = `${totalNetPL >= 0 ? '+' : ''}$${totalNetPL.toFixed(2)}`;
+            netEl.className = `font-bold ${totalNetPL >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+        }
+
+        function openCreateModal(prefilledDate = null) {
+            activePeekTradeId = null;
+
+            document.getElementById('peek-modal-heading').textContent = `New Trade Setup`;
+            document.getElementById('peek-title').value = "";
+            document.getElementById('peek-sl').value = "";
+            document.getElementById('peek-tp').value = "";
+            document.getElementById('peek-notes').value = "";
+            document.getElementById('peek-grade').value = "A";
+            document.getElementById('peek-direction').value = "Buy";
+            document.getElementById('peek-psych').value = "Calm & Disciplined";
+            document.getElementById('peek-slippage').checked = false;
+            
+            if (prefilledDate) {
+                document.getElementById('peek-date').value = prefilledDate;
+            } else {
+                const now = new Date();
+                document.getElementById('peek-date').value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+            }
+
+            document.getElementById('peek-delete-btn').classList.add('hidden');
+
+            const assetSelect = document.getElementById('peek-asset');
+            assetSelect.innerHTML = assetOptions.map(o => `<option value="${o}">${o}</option>`).join('');
+
+            const setupSelect = document.getElementById('peek-setup');
+            setupSelect.innerHTML = setups.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+            modalPositions = [{ id: Date.now(), lot: 0.1, entryPrice: 0, exitPrice: 0, pnl: 0 }];
+            renderPositionRows();
+            document.getElementById('notion-peek-modal').classList.remove('hidden');
+        }
+
+        function openPeekModal(id) {
+            activePeekTradeId = id;
+            const trade = trades.find(t => t.id === id);
+            if (!trade) return;
+
+            document.getElementById('peek-modal-heading').textContent = `Setup #${trade.id.toString().slice(-4)}`;
+            document.getElementById('peek-title').value = trade.title;
+            document.getElementById('peek-sl').value = trade.sl || "";
+            document.getElementById('peek-tp').value = trade.tp || "";
+            document.getElementById('peek-notes').value = trade.notes || "";
+            document.getElementById('peek-grade').value = trade.grade || "A";
+            document.getElementById('peek-direction').value = trade.direction || "Buy";
+            document.getElementById('peek-psych').value = trade.psych || "Calm & Disciplined";
+            document.getElementById('peek-slippage').checked = trade.slippage || false;
+            document.getElementById('peek-date').value = trade.date || "";
+
+            document.getElementById('peek-delete-btn').classList.remove('hidden');
+
+            const assetSelect = document.getElementById('peek-asset');
+            assetSelect.innerHTML = assetOptions.map(o => `<option value="${o}" ${trade.asset === o ? 'selected' : ''}>${o}</option>`).join('');
+
+            const setupSelect = document.getElementById('peek-setup');
+            setupSelect.innerHTML = setups.map(s => `<option value="${s.id}" ${trade.setupId === s.id ? 'selected' : ''}>${s.name}</option>`).join('');
+
+            modalPositions = JSON.parse(JSON.stringify(trade.positions || []));
+            if (modalPositions.length === 0) {
+                modalPositions = [{ id: Date.now(), lot: 0.1, entryPrice: 0, exitPrice: 0, pnl: trade.netPL || 0 }];
+            }
+
+            renderPositionRows();
+            document.getElementById('notion-peek-modal').classList.remove('hidden');
+        }
+
+        function closePeekModal() {
+            document.getElementById('notion-peek-modal').classList.add('hidden');
+            activePeekTradeId = null;
+        }
+
+        function savePeekChanges() {
+            const title = document.getElementById('peek-title').value.trim() || "Deriv Execution";
+            const asset = document.getElementById('peek-asset').value;
+            const setupId = document.getElementById('peek-setup').value;
+            const direction = document.getElementById('peek-direction').value;
+            const sl = parseFloat(document.getElementById('peek-sl').value) || 0;
+            const tp = parseFloat(document.getElementById('peek-tp').value) || 0;
+            const notes = document.getElementById('peek-notes').value;
+            const grade = document.getElementById('peek-grade').value;
+            const psych = document.getElementById('peek-psych').value;
+            const slippage = document.getElementById('peek-slippage').checked;
+            const date = document.getElementById('peek-date').value;
+
+            let totalLot = 0, sumWeightedEntry = 0, sumWeightedExit = 0, totalNetPL = 0;
+            modalPositions.forEach(p => {
+                totalLot += p.lot;
+                sumWeightedEntry += (p.entryPrice * p.lot);
+                sumWeightedExit += (p.exitPrice * p.lot);
+                totalNetPL += p.pnl;
+            });
+
+            const avgEntry = totalLot > 0 ? (sumWeightedEntry / totalLot) : 0;
+            const avgExit = totalLot > 0 ? (sumWeightedExit / totalLot) : 0;
+
+            if (activePeekTradeId === null) {
+                const newTrade = {
+                    id: Date.now(),
+                    title, asset, setupId, direction, sl, tp, notes, grade, psych, slippage, date,
+                    positions: modalPositions,
+                    totalLot, avgEntryPrice: avgEntry, avgExitPrice: avgExit, netPL: totalNetPL
+                };
+                trades.unshift(newTrade);
+                showToast("Trade setup logged successfully!", "success");
+            } else {
+                const trade = trades.find(t => t.id === activePeekTradeId);
+                if (trade) {
+                    Object.assign(trade, {
+                        title, asset, setupId, direction, sl, tp, notes, grade, psych, slippage, date,
+                        positions: modalPositions,
+                        totalLot, avgEntryPrice: avgEntry, avgExitPrice: avgExit, netPL: totalNetPL
+                    });
+                    showToast("Trade setup updated", "info");
+                }
+            }
+
+            saveToStorage();
+            closePeekModal();
+            renderAll();
+        }
+
+        function deleteActivePeekTradePrompt() {
+            showConfirm("Delete Setup", "Are you sure you want to delete this trade setup?", () => {
+                trades = trades.filter(t => t.id !== activePeekTradeId);
+                saveToStorage();
+                closePeekModal();
+                renderAll();
+                showToast("Trade deleted", "info");
+            });
+        }
+
+        function inlineDeleteTrade(event, id) {
+            event.stopPropagation();
+            showConfirm("Delete Trade", "Are you sure you want to remove this trade?", () => {
+                trades = trades.filter(t => t.id !== id);
+                saveToStorage();
+                renderAll();
+                showToast("Trade deleted", "info");
+            });
+        }
+
+        function clearAllDataPrompt() {
+            showConfirm("Wipe All Trades", "This will permanently clear your trading journal records.", () => {
+                trades = [];
+                saveToStorage();
+                renderAll();
+                showToast("All trade logs wiped", "error");
+            });
+        }
+
+        function addNewSetupPrompt() {
+            const name = prompt("Enter Strategy Setup Name:");
+            if (!name) return;
+            const rules = prompt("Enter Strategy Execution Rules:");
+            const newSetup = {
+                id: 's_' + Date.now(),
+                name: name.trim(),
+                rules: rules ? rules.trim() : 'No parameters specified.'
+            };
+            setups.push(newSetup);
+            saveToStorage();
+            renderAll();
+            showToast("New strategy playbook added!", "success");
+        }
+
+        function deleteSetup(id) {
+            showConfirm("Delete Strategy Playbook", "Trades tagged with this strategy will be labeled as Unassigned.", () => {
+                setups = setups.filter(s => s.id !== id);
+                saveToStorage();
+                renderAll();
+                showToast("Playbook deleted", "info");
+            });
+        }
+
+        // Core Dashboard Renderers
+        function renderAll() {
+            renderStats();
+            renderSidebar();
+            renderTable();
+            renderPlaybooks();
+            renderCalendar();
+            renderEquityChart();
+            runAIDiagnostics();
+        }
+
+        function renderStats() {
+            if (trades.length === 0) {
+                document.getElementById('stat-net-pl').textContent = "$0.00";
+                document.getElementById('stat-win-rate').textContent = "0%";
+                document.getElementById('stat-profit-factor').textContent = "0.00";
+                document.getElementById('stat-ev').textContent = "$0.00";
+                document.getElementById('stat-avg-win').textContent = "$0";
+                document.getElementById('stat-avg-loss').textContent = "-$0";
+                document.getElementById('stat-total-trades').textContent = "0 Total executions";
+                document.getElementById('stat-growth-pct').textContent = "0.0% account change";
+                return;
+            }
+
+            let totalNet = 0, wins = 0, losses = 0, winSum = 0, lossSum = 0;
+            let peakEquity = startingBalance, maxDrawdown = 0, runningEquity = startingBalance;
+
+            const chronological = [...trades].sort((a, b) => new Date(a.date) - new Date(b.date));
+            chronological.forEach(t => {
+                totalNet += t.netPL;
+                runningEquity += t.netPL;
+                if (runningEquity > peakEquity) peakEquity = runningEquity;
+                const dd = peakEquity - runningEquity;
+                if (dd > maxDrawdown) maxDrawdown = dd;
+
+                if (t.netPL > 0) { wins++; winSum += t.netPL; } 
+                else if (t.netPL < 0) { losses++; lossSum += Math.abs(t.netPL); }
+            });
+
+            const wr = (wins / trades.length) * 100;
+            const pf = lossSum > 0 ? (winSum / lossSum).toFixed(2) : (winSum > 0 ? '99+' : '0.00');
+            const ev = totalNet / trades.length;
+            const avgWin = wins > 0 ? (winSum / wins) : 0;
+            const avgLoss = losses > 0 ? (lossSum / losses) : 0;
+            const growthPct = (totalNet / startingBalance) * 100;
+
+            const netEl = document.getElementById('stat-net-pl');
+            netEl.textContent = `${totalNet >= 0 ? '+' : ''}$${totalNet.toFixed(2)}`;
+            netEl.className = `text-2xl font-extrabold font-mono mt-1 ${totalNet >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+
+            document.getElementById('stat-growth-pct').textContent = `${growthPct >= 0 ? '+' : ''}${growthPct.toFixed(1)}% account change`;
+            document.getElementById('stat-win-rate').textContent = `${wr.toFixed(0)}%`;
+            document.getElementById('stat-total-trades').textContent = `${trades.length} Total executions`;
+            document.getElementById('stat-profit-factor').textContent = pf;
+
+            const evEl = document.getElementById('stat-ev');
+            evEl.textContent = `${ev >= 0 ? '+' : ''}$${ev.toFixed(2)}`;
+            evEl.className = `text-2xl font-extrabold font-mono mt-1 ${ev >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+
+            document.getElementById('stat-avg-win').textContent = `$${avgWin.toFixed(0)}`;
+            document.getElementById('stat-avg-loss').textContent = `-$${avgLoss.toFixed(0)}`;
+            document.getElementById('stat-max-dd').textContent = `Max DD: -$${maxDrawdown.toFixed(2)}`;
+        }
+
+        function renderSidebar() {
+            const container = document.getElementById('sidebar-setups-list');
+            container.innerHTML = '';
+
+            setups.forEach(setup => {
+                const setupTrades = trades.filter(t => t.setupId === setup.id);
+                let totalPL = 0;
+                setupTrades.forEach(t => totalPL += t.netPL);
+
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between px-2.5 py-1.5 hover:bg-slate-100 rounded-lg cursor-pointer text-xs text-slate-700 transition";
+                div.onclick = () => switchView('playbooks');
+                div.innerHTML = `
+                    <div class="flex items-center space-x-2 truncate">
+                        <span class="w-1.5 h-1.5 rounded-full ${totalPL >= 0 ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
+                        <span class="truncate font-medium">${setup.name}</span>
+                    </div>
+                    <span class="font-mono text-[10px] font-bold ${totalPL >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${totalPL >= 0 ? '+' : ''}$${totalPL.toFixed(0)}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('trade-log-tbody');
+            const emptyState = document.getElementById('table-empty-state');
+            const query = document.getElementById('db-search').value.toLowerCase().trim();
+            const filterAsset = document.getElementById('filter-asset').value;
+            const filterOutcome = document.getElementById('filter-outcome').value;
+
+            tbody.innerHTML = '';
+
+            const filteredTrades = trades.filter(t => {
+                const setup = setups.find(s => s.id === t.setupId);
+                const setupName = setup ? setup.name.toLowerCase() : 'unassigned';
+                const matchQuery = t.title.toLowerCase().includes(query) || 
+                                   t.asset.toLowerCase().includes(query) || 
+                                   setupName.includes(query) ||
+                                   (t.psych && t.psych.toLowerCase().includes(query));
+                
+                const matchAsset = (filterAsset === 'All') || (t.asset === filterAsset);
+                
+                let matchOutcome = true;
+                if (filterOutcome === 'Win') matchOutcome = t.netPL > 0;
+                if (filterOutcome === 'Loss') matchOutcome = t.netPL <= 0;
+
+                return matchQuery && matchAsset && matchOutcome;
+            });
+
+            if (filteredTrades.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            filteredTrades.forEach(t => {
+                const setup = setups.find(s => s.id === t.setupId);
+                const setupName = setup ? setup.name : 'Unassigned';
+
+                const entry = t.avgEntryPrice || 0;
+                const exit = t.avgExitPrice || 0;
+                const sl = t.sl || 0;
+                const tp = t.tp || 0;
+                const posCount = (t.positions && t.positions.length) ? t.positions.length : 1;
+
+                let plannedRR = "-", actualRR = "-";
+                const riskDistance = Math.abs(entry - sl);
+                if (sl > 0 && riskDistance > 0) {
+                    if (tp > 0) plannedRR = `1:${(Math.abs(tp - entry) / riskDistance).toFixed(1)}`;
+                    if (exit > 0) {
+                        const realized = t.direction === 'Buy' ? (exit - entry) : (entry - exit);
+                        actualRR = `1:${(realized / riskDistance).toFixed(1)}`;
+                    } else {
+                        actualRR = "Open";
+                    }
+                }
+
+                const pnlColor = t.netPL >= 0 ? 'text-emerald-600' : 'text-rose-600';
+
+                const row = document.createElement('tr');
+                row.className = "hover:bg-slate-50 cursor-pointer transition border-b border-slate-100 font-medium";
+                row.onclick = () => openPeekModal(t.id);
+                row.innerHTML = `
+                    <td class="py-3 px-3.5">
+                        <div class="font-bold text-slate-900">${t.title}</div>
+                        <div class="text-[10px] text-slate-400 font-mono mt-0.5">${t.date || 'No Date'}</div>
+                    </td>
+                    <td class="py-3 px-3.5">
+                        <div class="flex items-center space-x-1.5 flex-wrap gap-1">
+                            <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 whitespace-nowrap">
+                                ${t.asset}
+                            </span>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 text-slate-600">
+                                ${posCount} pos (${(t.totalLot || 0).toFixed(2)})
+                            </span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-3.5">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${t.direction === 'Buy' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
+                            ${t.direction ? t.direction.toUpperCase() : 'BUY'}
+                        </span>
+                    </td>
+                    <td class="py-3 px-3.5 text-slate-600">${setupName}</td>
+                    <td class="py-3 px-3.5 text-right font-mono text-slate-700">${entry.toFixed(2)}</td>
+                    <td class="py-3 px-3.5 text-right font-mono text-slate-500">${plannedRR}</td>
+                    <td class="py-3 px-3.5 text-right font-mono font-bold text-slate-900">${actualRR}</td>
+                    <td class="py-3 px-3.5 text-right font-mono font-bold ${pnlColor}">${t.netPL >= 0 ? '+' : '-'}$${Math.abs(t.netPL).toFixed(2)}</td>
+                    <td class="py-3 px-3.5">
+                        <div class="flex flex-wrap gap-1 items-center">
+                            <span class="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700 border border-slate-200">${t.psych || "Calm & Disciplined"}</span>
+                            ${t.slippage ? '<span class="px-1.5 py-0.5 rounded text-[10px] bg-amber-50 text-amber-700 border border-amber-300 font-semibold">Slipped</span>' : ''}
+                        </div>
+                    </td>
+                    <td class="py-3 px-3.5 text-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] bg-slate-100 border border-slate-200 text-slate-800 font-bold">${t.grade || 'A'}</span>
+                    </td>
+                    <td class="py-3 px-3.5 text-center">
+                        <button onclick="inlineDeleteTrade(event, ${t.id})" class="text-slate-400 hover:text-rose-600 transition text-[11px] font-semibold">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('db-search').value = "";
+            document.getElementById('filter-asset').value = "All";
+            document.getElementById('filter-outcome').value = "All";
+            renderTable();
+        }
+
+        function renderPlaybooks() {
+            const grid = document.getElementById('playbook-cards-grid');
+            grid.innerHTML = '';
+
+            setups.forEach(setup => {
+                const setupTrades = trades.filter(t => t.setupId === setup.id);
+                const totalCount = setupTrades.length;
+                let wins = 0, sumPL = 0;
+                setupTrades.forEach(t => {
+                    sumPL += t.netPL;
+                    if (t.netPL > 0) wins++;
+                });
+
+                const winRate = totalCount > 0 ? ((wins / totalCount) * 100).toFixed(0) : 0;
+                const plColor = sumPL >= 0 ? 'text-emerald-600' : 'text-rose-600';
+
+                const card = document.createElement('div');
+                card.className = "p-5 bg-white border border-slate-200 rounded-xl space-y-4 hover:border-slate-300 transition flex flex-col justify-between shadow-xs";
+                card.innerHTML = `
+                    <div class="space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-slate-900 text-sm truncate flex items-center space-x-2">
+                                <span>🛠️</span>
+                                <span class="truncate">${setup.name}</span>
+                            </h3>
+                            <span class="font-mono font-bold text-xs ${plColor}">${sumPL >= 0 ? '+' : ''}$${sumPL.toFixed(2)}</span>
+                        </div>
+                        <p class="text-xs text-slate-500 leading-relaxed italic">"${setup.rules}"</p>
+                    </div>
+                    <div class="border-t border-slate-100 pt-3.5">
+                        <div class="flex items-center justify-between text-[11px] text-slate-500 font-mono">
+                            <div>Win Rate: <span class="font-bold text-indigo-600">${winRate}%</span></div>
+                            <div>Occurrences: <span class="font-bold text-slate-800">${totalCount} setups</span></div>
+                        </div>
+                        <div class="flex justify-end mt-3">
+                            <button onclick="deleteSetup('${setup.id}')" class="text-[10px] text-rose-600 hover:text-rose-700 transition font-semibold">Delete Playbook</button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-days-grid');
+            grid.innerHTML = '';
+
+            const date = new Date();
+            date.setMonth(date.getMonth() + currentMonthOffset);
+            const year = date.getFullYear();
+            const month = date.getMonth();
+
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('calendar-month-name').textContent = `${monthNames[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                const cell = document.createElement('div');
+                cell.className = "bg-slate-100/50 min-h-[92px] p-1.5 text-right text-slate-400 rounded-lg";
+                grid.appendChild(cell);
+            }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const cell = document.createElement('div');
+                cell.className = "bg-white hover:bg-slate-50 cursor-pointer min-h-[92px] p-2 flex flex-col justify-between items-stretch text-right border border-slate-200 rounded-lg transition shadow-xs";
+
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                cell.onclick = () => filterTableByDate(dateStr);
+
+                const label = document.createElement('span');
+                label.className = "text-[11px] font-mono font-bold text-slate-400";
+                label.textContent = d;
+                cell.appendChild(label);
+
+                const dailyTrades = trades.filter(t => t.date === dateStr);
+                if (dailyTrades.length > 0) {
+                    let dayNet = 0;
+                    dailyTrades.forEach(t => dayNet += t.netPL);
+
+                    const pill = document.createElement('div');
+                    pill.className = `p-1 rounded-md text-[10px] font-mono font-bold text-center mt-1 shadow-xs ${dayNet >= 0 ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`;
+                    pill.textContent = `${dayNet >= 0 ? '+' : ''}$${dayNet.toFixed(0)} (${dailyTrades.length})`;
+                    cell.appendChild(pill);
+                }
+
+                grid.appendChild(cell);
+            }
+        }
+
+        function filterTableByDate(dateStr) {
+            switchView('logs');
+            document.getElementById('db-search').value = dateStr;
+            renderTable();
+            showToast(`Filtered logs for ${dateStr}`, 'info');
+        }
+
+        function changeMonth(offset) {
+            currentMonthOffset += offset;
+            renderCalendar();
+        }
+
+        function renderEquityChart() {
+            const canvas = document.getElementById('equityChartCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            if (equityChartInstance) {
+                equityChartInstance.destroy();
+                equityChartInstance = null;
+            }
+
+            const chronological = [...trades].sort((a, b) => new Date(a.date) - new Date(b.date));
+            let runningEquity = startingBalance;
+            const labels = ['Starting', ...chronological.map((t, idx) => `#${idx + 1}`)];
+            const dataPoints = [startingBalance, ...chronological.map(t => {
+                runningEquity += t.netPL;
+                return runningEquity;
+            })];
+
+            equityChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Balance ($)',
+                        data: dataPoints,
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.05)',
+                        borderWidth: 2.5,
+                        fill: true,
+                        tension: 0.25,
+                        pointRadius: 2.5,
+                        pointHoverRadius: 4.5,
+                        pointBackgroundColor: '#4f46e5'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: 'rgba(226, 232, 240, 0.8)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+                        y: { grid: { color: 'rgba(226, 232, 240, 0.8)' }, ticks: { color: '#64748b', font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        // Zella Quant AI Advisor Engine
+        function runAIDiagnostics() {
+            if (trades.length === 0) return;
+
+            const assetSums = {};
+            trades.forEach(t => {
+                if (!assetSums[t.asset]) assetSums[t.asset] = 0;
+                assetSums[t.asset] += t.netPL;
+            });
+
+            let topAsset = "N/A", topSum = -999999;
+            Object.keys(assetSums).forEach(a => {
+                if (assetSums[a] > topSum) {
+                    topSum = assetSums[a];
+                    topAsset = a;
+                }
+            });
+            document.getElementById('ai-diagnostic-top-asset').textContent = `${topAsset} (+$${topSum.toFixed(2)})`;
+
+            const psychSums = {};
+            trades.forEach(t => {
+                const p = t.psych || "Calm & Disciplined";
+                if (!psychSums[p]) psychSums[p] = 0;
+                psychSums[p] += t.netPL;
+            });
+
+            let worstPsych = "N/A", worstSum = 999999;
+            Object.keys(psychSums).forEach(p => {
+                if (psychSums[p] < worstSum) {
+                    worstSum = psychSums[p];
+                    worstPsych = p;
+                }
+            });
+            const worstPsychEl = document.getElementById('ai-diagnostic-worst-psych');
+            if (worstSum >= 0) {
+                worstPsychEl.textContent = "None (Fully Calibrated)";
+                worstPsychEl.className = "font-bold text-emerald-600 mt-0.5";
+            } else {
+                worstPsychEl.textContent = `${worstPsych} (-$${Math.abs(worstSum).toFixed(2)})`;
+                worstPsychEl.className = "font-bold text-rose-600 mt-0.5";
+            }
+
+            let layeredPnl = 0, layeredCount = 0;
+            trades.forEach(t => {
+                if (t.positions && t.positions.length > 1) {
+                    layeredPnl += t.netPL;
+                    layeredCount++;
+                }
+            });
+            const layeredEl = document.getElementById('ai-diagnostic-layered-pnl');
+            layeredEl.textContent = `${layeredPnl >= 0 ? '+' : ''}$${layeredPnl.toFixed(2)} (${layeredCount} setups)`;
+            layeredEl.className = `font-bold mt-0.5 ${layeredPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+
+            let slipTotal = 0;
+            trades.forEach(t => {
+                if (t.slippage && t.netPL < 0) slipTotal += Math.abs(t.netPL);
+            });
+            document.getElementById('ai-diagnostic-slippage-toll').textContent = `$${slipTotal.toFixed(2)}`;
+        }
+
+        function triggerDirectAIPrompt(type) {
+            let aiTextResponse = "";
+            if (trades.length === 0) {
+                appendChatMessage("🤖 Zella Quant AI", "No trades logged in the database. Log executions or restore a backup to begin analytics.");
+                return;
+            }
+
+            if (type === 'vol90') {
+                const vol90Trades = trades.filter(t => t.asset.includes("90"));
+                const wins = vol90Trades.filter(t => t.netPL > 0).length;
+                const wr = vol90Trades.length > 0 ? (wins / vol90Trades.length * 100).toFixed(0) : 0;
+                let net = 0;
+                vol90Trades.forEach(t => net += t.netPL);
+
+                aiTextResponse = `<b>⚡ Volatility 90 (1s) Index Analysis:</b><br><br>
+                • <b>Logged Setups:</b> ${vol90Trades.length}<br>
+                • <b>Win Rate:</b> <b class="text-indigo-600">${wr}%</b><br>
+                • <b>Realized Net P&L:</b> <b class="${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${net >= 0 ? '+' : ''}$${net.toFixed(2)}</b><br><br>
+                Volatility 90 (1s) moves at high tick speeds with 90% fixed volatility generated once per second. Spreads and rapid candle rejections require strict trailing stop discipline.`;
+            }
+            else if (type === 'step') {
+                const stepTrades = trades.filter(t => t.asset.includes("Step"));
+                const wins = stepTrades.filter(t => t.netPL > 0).length;
+                const wr = stepTrades.length > 0 ? (wins / stepTrades.length * 100).toFixed(0) : 0;
+                let stepNet = 0;
+                stepTrades.forEach(t => stepNet += t.netPL);
+
+                aiTextResponse = `<b>🪜 Deriv Step Indices Analysis:</b><br><br>
+                • <b>Logged Step Executions:</b> ${stepTrades.length} setups<br>
+                • <b>Win Rate:</b> <b class="text-indigo-600">${wr}%</b><br>
+                • <b>Realized Net P&L:</b> <b class="${stepNet >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${stepNet >= 0 ? '+' : ''}$${stepNet.toFixed(2)}</b><br><br>
+                Step Indices move in fixed price steps per tick (e.g., 0.1 for classic Step, 0.2 for Step 200). Symmetrical price movement allows technical ranges to be respected reliably.`;
+            }
+            else if (type === 'stacking') {
+                const multiPos = trades.filter(t => t.positions && t.positions.length > 1);
+                const wins = multiPos.filter(t => t.netPL > 0).length;
+                const wr = multiPos.length > 0 ? (wins / multiPos.length * 100).toFixed(0) : 0;
+                let net = 0;
+                multiPos.forEach(t => net += t.netPL);
+
+                aiTextResponse = `<b>📦 Position Layering (Stacking) Audit:</b><br><br>
+                • <b>Layered Setups:</b> ${multiPos.length} | <b>Win Rate:</b> <b class="text-indigo-600">${wr}%</b><br>
+                • <b>Layered P&L:</b> <b class="${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${net >= 0 ? '+' : ''}$${net.toFixed(2)}</b><br><br>
+                ${net < 0 ? '⚠️ Layering into drawdowns is currently costing your account. Avoid adding positions to a losing trade unless you are scaling into a pre-defined multi-touch demand zone.' : '✅ Multi-position entries are contributing positively to your cumulative expectancy.'}`;
+            }
+            else if (type === 'kelly') {
+                let wins = 0, winSum = 0, lossSum = 0;
+                trades.forEach(t => {
+                    if (t.netPL > 0) { wins++; winSum += t.netPL; }
+                    else if (t.netPL < 0) { lossSum += Math.abs(t.netPL); }
+                });
+                const p = wins / trades.length;
+                const q = 1 - p;
+                const b = (wins > 0 && (trades.length - wins) > 0) ? (winSum / wins) / (lossSum / (trades.length - wins)) : 1;
+                const kelly = (b * p - q) / b;
+
+                aiTextResponse = `<b>📐 Kelly Criterion & Sizing Metric:</b><br><br>
+                • <b>Empirical Win Rate ($p$):</b> ${(p * 100).toFixed(0)}%<br>
+                • <b>Win/Loss Payoff Ratio ($b$):</b> ${b.toFixed(2)}<br>
+                • <b>Optimal Full Kelly:</b> ${(kelly * 100).toFixed(1)}% of capital<br>
+                • <b>Recommended Half-Kelly:</b> <b class="text-emerald-600">${Math.max(0.5, (kelly * 50)).toFixed(1)}% per trade</b><br><br>
+                Keep risk within 1-2% of total equity per setup to guard against sequence drawdowns.`;
+            }
+
+            appendChatMessage("🤖 Zella Quant AI", aiTextResponse);
+        }
+
+        function handleChatSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('ai-user-query');
+            const q = input.value.trim().toLowerCase();
+            if (!q) return;
+
+            appendChatMessage("👤 Trader", input.value);
+            input.value = "";
+
+            if (q.includes("90") || q.includes("vol 90")) triggerDirectAIPrompt('vol90');
+            else if (q.includes("step")) triggerDirectAIPrompt('step');
+            else if (q.includes("stack") || q.includes("layer") || q.includes("pos")) triggerDirectAIPrompt('stacking');
+            else if (q.includes("kelly") || q.includes("size") || q.includes("risk")) triggerDirectAIPrompt('kelly');
+            else {
+                setTimeout(() => {
+                    appendChatMessage("🤖 Zella Quant AI", "I have evaluated your query against your database. Try clicking one of the four audit buttons above (e.g. 'Vol 90 (1s) Edge', 'Step Indices Edge', or 'Kelly Criterion').");
+                }, 300);
+            }
+        }
+
+        function appendChatMessage(sender, text) {
+            const container = document.getElementById('chat-messages-container');
+            const msg = document.createElement('div');
+            msg.className = sender.includes("Trader") ? "p-3 bg-slate-100 border border-slate-200 rounded-lg text-slate-800" : "p-3.5 bg-indigo-50/80 text-indigo-950 border border-indigo-100 rounded-lg leading-relaxed";
+            msg.innerHTML = `<b>${sender}:</b> ${text}`;
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Export and Import
+        function exportCSV() {
+            if (trades.length === 0) { showToast("No trades to export", "error"); return; }
+            let csv = "ID,Date,Title,Asset,Direction,Layers,TotalLot,AvgEntry,AvgExit,NetPL,Grade,Psych,Slippage\n";
+            trades.forEach(t => {
+                csv += `"${t.id}","${t.date}","${t.title}","${t.asset}","${t.direction}","${(t.positions||[]).length}","${t.totalLot}","${t.avgEntryPrice}","${t.avgExitPrice}","${t.netPL}","${t.grade}","${t.psych}","${t.slippage}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `deriv_trades_${Date.now()}.csv`;
+            a.click();
+        }
+
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ setups, trades, startingBalance }));
+            const a = document.createElement('a');
+            a.href = dataStr;
+            a.download = `deriv_workspace_${Date.now()}.json`;
+            a.click();
+        }
+
+        function triggerImport() { document.getElementById('importFile').click(); }
+
+        function importJSON(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const r = new FileReader();
+            r.onload = function(evt) {
+                try {
+                    const parsed = JSON.parse(evt.target.result);
+                    if (parsed.trades && parsed.setups) {
+                        setups = parsed.setups;
+                        trades = parsed.trades;
+                        startingBalance = parsed.startingBalance || 2500;
+                        saveToStorage();
+                        renderAll();
+                        showToast("Workspace backup restored!", "success");
+                    }
+                } catch(err) { showToast("Error parsing file", "error"); }
+                document.getElementById('importFile').value = '';
+            };
+            r.readAsText(file);
+        }
+    </script>
+</body>
+</html>
